@@ -1,0 +1,45 @@
+{
+  "name": "transport-library",
+  "version": "0.0.0-semantically-released",
+  "description": "Transport layer for your app",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest",
+    "semantic-release": "semantic-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gzaripov/transport-library.git"
+  },
+  "keywords": [
+    "http",
+    "client",
+    "transport",
+    "request"
+  ],
+  "author": "gzaripov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gzaripov/transport-library/issues"
+  },
+  "homepage": "https://github.com/gzaripov/transport-library#readme",
+  "devDependencies": {
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.1",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-typescript": "^7.2.1",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-babel": "^5.3.0",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-jest": "^23.8.2",
+    "eslint-plugin-prettier": "^3.1.2",
+    "jest": "^25.3.0",
+    "prettier": "^2.0.4",
+    "semantic-release": "^17.0.4",
+    "ts-jest": "^25.3.1",
+    "typescript": "^3.8.3"
+  }
+}

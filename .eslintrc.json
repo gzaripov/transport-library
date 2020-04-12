@@ -1,0 +1,54 @@
+{
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "env": {
+    "es6": true,
+    "jest": true,
+    "commonjs": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended",
+    "plugin:import/errors",
+    "plugin:jest/recommended"
+  ],
+  "plugins": ["babel", "prettier", "import", "jest"],
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "./tsconfig.json"
+      },
+      "plugins": ["babel", "prettier", "@typescript-eslint", "import", "jest"],
+      "extends": [
+        "airbnb-typescript/base",
+        "eslint:recommended",
+        "plugin:prettier/recommended",
+        "prettier/@typescript-eslint",
+        "plugin:import/errors",
+        "plugin:import/typescript",
+        "plugin:jest/recommended"
+      ],
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          {
+            "vars": "all",
+            "args": "after-used",
+            "ignoreRestSiblings": false
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.spec.*"],
+      "rules": {
+        "max-nested-callbacks": "off"
+      }
+    }
+  ]
+}
