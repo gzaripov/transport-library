@@ -20,7 +20,7 @@ export type RequestEvents = {
   error: (error: string | Error) => void;
 };
 
-export type Request<CustomSettings> = {
+export type RequestEmitter<CustomSettings> = {
   url: string;
   method: Method;
   headers: Record<string, string>;
@@ -41,7 +41,7 @@ export type ResponseEvents = {
 
 export type ResponseEmitter = Emitter<ResponseEvents>;
 
-export type Adapter<CustomSettings> = (
-  request: Request<CustomSettings>,
+export type Adapter<RequestConfig> = (
+  request: RequestEmitter<RequestConfig>,
   response: ResponseEmitter,
 ) => void;
