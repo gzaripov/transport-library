@@ -3,12 +3,12 @@ type Listener = (...args: any[]) => void;
 export type EventsMap = { [event: string]: Listener };
 
 export type Emitter<Events extends EventsMap> = {
-  on: <E extends string>(event: E, cb: Events[E]) => Emitter<Events>;
-  once: <E extends string>(event: E, cb: EventsMap[E]) => Emitter<Events>;
-  off: <E extends string>(event: E, cb: EventsMap[E]) => Emitter<Events>;
-  offAll: <E extends string>(event?: E) => Emitter<Events>;
-  emit: <E extends string>(event: E, ...args: Parameters<Events[E]>) => Emitter<Events>;
-  listeners: <E extends string>(event: E) => Listener[];
+  on: <E extends keyof Events>(event: E, cb: Events[E]) => Emitter<Events>;
+  once: <E extends keyof Events>(event: E, cb: Events[E]) => Emitter<Events>;
+  off: <E extends keyof Events>(event: E, cb: Events[E]) => Emitter<Events>;
+  offAll: <E extends keyof Events>(event?: E) => Emitter<Events>;
+  emit: <E extends keyof Events>(event: E, ...args: Parameters<Events[E]>) => Emitter<Events>;
+  listeners: <E extends keyof Events>(event: E) => Listener[];
 };
 
 type ListenersMap<Events extends EventsMap> = Map<keyof Events, Set<Events[keyof Events]>>;
