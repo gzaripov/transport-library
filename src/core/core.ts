@@ -1,6 +1,5 @@
 import { Adapter } from '../adapters/adapter';
 import nodeAdapter from '../adapters/node/node-adapter';
-import fetchAdapter from '../adapters/fetch/fetch-adapter';
 
 export type Method =
   | 'get'
@@ -18,12 +17,15 @@ export type Method =
   | 'patch'
   | 'PATCH';
 
+type ResponseType = 'json' | 'text' | 'arraybuffer';
+
 type BaseRequestOptions = {
   url: string;
 } & Partial<{
   method: Method;
   baseUrl: string;
   timeout: number;
+  responseType: ResponseType;
   headers: Record<string, string>;
   params: Record<string, any>;
   cancelToken: string;
@@ -38,60 +40,76 @@ type Request<AdapterSettings> = BaseRequestOptions & {
   adapter?: Adapter<AdapterSettings>;
 } & Omit<AdapterSettings, keyof BaseRequestOptions>;
 
-type Response<T = any> = {
-  data: T;
+type Response<Type = 'json', T = any> = {
+  data: Type extends 'text' ? string : Type extends 'arraybuffer' ? ArrayBuffer : T;
   status: number;
   statusText: string;
   headers: Record<string, string>;
 };
 
-type CreateTransportOptions<AdapterSettings> = {
+type CreateTransportOptions<ResType extends ResponseType, AdapterSettings> = {
   adapter: Adapter<AdapterSettings>;
+  responseType?: ResType;
   timeout: number;
 } & AdapterSettings;
 
 type NamedRequestConfig<T> = Omit<T, 'url' | 'method'>;
 
-export interface Transport<AdapterSettings> {
+export interface Transport<ResType, AdapterSettings> {
   (config: Request<AdapterSettings>): Promise<Response>;
   (url: string, config?: Omit<Request<AdapterSettings>, 'url'>): Promise<Response>;
-  request<T = any, R = Response<T>>(config: Request<AdapterSettings>): Promise<R>;
-  get<T = any, R = Response<T>>(
+  request<T = any, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
+    config: R,
+  ): Promise<Response<undefined extends R['responseType'] ? ResType : R['responseType'], T>>;
+
+  get<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
-  delete<T = any, R = Response<T>>(
+  delete<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
-  head<T = any, R = Response<T>>(
+  head<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
-  post<T = any, R = Response<T>>(
+  post<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
-  put<T = any, R = Response<T>>(
+  put<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
-  patch<T = any, R = Response<T>>(
+  patch<T = any, R = Request<AdapterSettings>>(
     url: string,
     config?: NamedRequestConfig<Request<AdapterSettings>>,
   ): Promise<R>;
   extend: {
-    (...layers: Middleware<Request<AdapterSettings>, Response>[]): Transport<AdapterSettings>;
-    (config: Middleware<Request<AdapterSettings>, Response>): Transport<AdapterSettings>;
+    (...layers: Middleware<Request<AdapterSettings>, Response>[]): Transport<
+      ResType,
+      AdapterSettings
+    >;
+    (config: Middleware<Request<AdapterSettings>, Response>): Transport<ResType, AdapterSettings>;
   };
 }
 
-const createTransport = <AdapterSettings>(
-  options: CreateTransportOptions<AdapterSettings>,
-): Transport<AdapterSettings> => {
-  return (options as unknown) as Transport<AdapterSettings>;
+const createTransport = <AdapterSettings, ResType extends ResponseType = 'json'>(
+  options: CreateTransportOptions<ResType, AdapterSettings>,
+): Transport<ResType, AdapterSettings> => {
+  return (options as unknown) as any;
 };
 
-const transport = createTransport({ adapter: nodeAdapter, timeout: 100 });
+async function main() {
+  const transport = createTransport({
+    adapter: nodeAdapter,
+    timeout: 100,
+  });
 
-transport.get('/test', {});
+  const response = await transport.request<number>({
+    url: '/test',
+  });
+
+  response.data;
+}
