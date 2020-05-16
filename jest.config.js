@@ -2,9 +2,7 @@ module.exports = {
   verbose: false,
   testEnvironment: 'node',
   cache: true,
-  transform: {
-    '^.+\\.tsx?$': 'ts-jest',
-  },
+  preset: 'ts-jest',
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.ts'],
   coverageThreshold: {

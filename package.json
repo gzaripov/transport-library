@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/gzaripov/transport-library#readme",
   "devDependencies": {
-    "@types/jest": "^25.2.1",
+    "@types/jest": "^25.2.2",
     "@types/node": "^13.11.1",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
@@ -37,10 +37,10 @@
     "eslint-plugin-jest": "^23.8.2",
     "eslint-plugin-prettier": "^3.1.2",
     "get-port": "^5.1.1",
-    "jest": "^25.3.0",
+    "jest": "^26.0.1",
     "prettier": "^2.0.4",
     "semantic-release": "^17.0.4",
-    "ts-jest": "^25.3.1",
-    "typescript": "^3.8.3"
+    "ts-jest": "^26.0.0",
+    "typescript": "^3.9.2"
   }
 }
