@@ -29,18 +29,20 @@ export type RequestEmitter<CustomSettings> = {
   data?: any;
   withCredentials?: boolean;
   agent?: { http?: http.Agent; https?: https.Agent };
-  // cancelToken?: CancelToken;
 } & CustomSettings &
   Emitter<RequestEvents>;
 
 export type ResponseEvents = {
   head: (data: { status: number; statusText: string; headers: Record<string, string> }) => void;
-  end: () => void;
-  data: (data: Uint8Array) => void;
   error: (error: string | Error) => void;
+  text: (text: string) => void;
 };
 
 export type ResponseEmitter = Emitter<ResponseEvents>;
+
+export type StreamAdapter<RequestConfig, StreamType> = (
+  request: RequestEmitter<RequestConfig>,
+) => StreamType;
 
 export type Adapter<RequestConfig> = (
   request: RequestEmitter<RequestConfig>,
