@@ -39,8 +39,6 @@ export default async function createTestServer(handler?: http.RequestListener) {
     });
   };
 
-  afterEach(stop);
-
   return {
     instance,
     port,

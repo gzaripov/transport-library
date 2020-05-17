@@ -1,4 +1,11 @@
-import { Request, ResponseType, RequestMethod, Transport, CreateTransportOptions } from './types';
+import {
+  Request,
+  ResponseType,
+  RequestMethod,
+  Transport,
+  CreateTransportOptions,
+  Response,
+} from './types';
 import createEventEmitter from '../lib/event-emitter/event-emitter';
 import { RequestEvents, ResponseEvents, Adapter } from '../adapters/adapter';
 
@@ -51,20 +58,22 @@ const makeRequest = <R extends Request & { adapter: Adapter<any> }>(config: R): 
 
   config.adapter(request, response);
 
-  const textDecoder = new TextDecoder('utf-8');
-  const chunks: string[] = [];
-
-  response.on('data', (chunk) => {
-    if (typeof chunk === 'string') {
-      chunks.push(chunk);
-    } else {
-      chunks.push(textDecoder.decode(chunk));
-    }
-  });
-
   return new Promise((resolve, reject) => {
-    response.on('end', () => {
-      resolve(JSON.parse(chunks.join('')));
+    const responseObject = {} as Response;
+
+    response.on('head', ({ status, statusText, headers }) => {
+      responseObject.status = status;
+      responseObject.statusText = statusText;
+      responseObject.headers = headers;
+    });
+
+    response.on('text', (text) => {
+      try {
+        responseObject.data = config.responseType === 'text' ? text : JSON.parse(text);
+        resolve(responseObject);
+      } catch (error) {
+        reject(error);
+      }
     });
     response.on('error', reject);
     request.on('error', reject);
@@ -75,12 +84,34 @@ const createTransport = <AdapterSettings, ResType extends ResponseType = 'json'>
   options: CreateTransportOptions<ResType, AdapterSettings>,
 ) => {
   const transport = {
-    request: makeRequest,
+    request: (opts) => {
+      const defaultOptions = { ...options, ...opts, middlwares: [] } as any;
+      const request = (newOpts = defaultOptions) => makeRequest(newOpts);
+
+      const layers = [
+        ...(options.middlwares! || []).reverse(),
+        ...(opts.middlwares || []).reverse(),
+      ];
+
+      if (!layers.length) {
+        return request();
+      }
+
+      let currentLayer = request;
+
+      layers.forEach((layer) => {
+        const previousLayer = currentLayer;
+        currentLayer = (newOpts = defaultOptions) => layer(previousLayer, newOpts);
+      });
+
+      return currentLayer();
+    },
   } as Transport<AdapterSettings, ResType>;
   const requestMethods: RequestMethod[] = ['get', 'put', 'post', 'head', 'patch', 'delete'];
 
   requestMethods.forEach((method) => {
-    transport[method] = (url, opts) => makeRequest({ ...options, ...opts, method, url } as any);
+    transport[method] = (url, opts) =>
+      transport.request({ ...options, ...opts, method, url } as any);
   });
 
   return transport;
