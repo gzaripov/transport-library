@@ -1,9 +1,9 @@
-import { Adapter } from '../adapter';
+import { Adapter, StreamAdapter } from '../adapter';
 
-const fetchAdapter: Adapter<RequestInit> = (request, response) => {
+export const fetchAdapter: Adapter<RequestInit> = (request, response) => {
   const req = new Request(request.url, request);
 
-  fetch(req)
+  return fetch(req)
     .then((res) => {
       request.emit('sent');
 
@@ -13,34 +13,55 @@ const fetchAdapter: Adapter<RequestInit> = (request, response) => {
         headers: Object.fromEntries(res.headers.entries()),
       });
 
-      if (!res.body) {
-        response.emit('end');
-        return;
-      }
+      return res.text();
+    })
+    .then(
+      (text) => response.emit('text', text),
+      (error) => {
+        request.emit('error', error);
+      },
+    );
+};
 
-      const reader = res.body.getReader();
+export const fetchStreamAdapter: StreamAdapter<RequestInit, ReadableStream<Uint8Array>> = (
+  request,
+) => {
+  const req = new Request(request.url, request);
 
-      function read() {
-        reader.read().then(({ done, value }) => {
-          if (done) {
-            response.emit('end');
+  return new ReadableStream({
+    start(controller) {
+      fetch(req)
+        .then((res) => {
+          request.emit('sent');
 
+          if (!res.body) {
+            controller.close();
             return;
           }
 
-          if (value) {
-            response.emit('data', value);
+          const reader = res.body.getReader();
+
+          function read() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                controller.close();
+
+                return;
+              }
+
+              if (value) {
+                controller.enqueue(value);
+              }
+
+              read();
+            });
           }
 
           read();
+        })
+        .catch((error) => {
+          request.emit('error', error);
         });
-      }
-
-      read();
-    })
-    .catch((error) => {
-      request.emit('error', error);
-    });
+    },
+  });
 };
-
-export default fetchAdapter;
