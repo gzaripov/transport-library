@@ -1,115 +1,89 @@
-import { Adapter } from '../adapters/adapter';
-import nodeAdapter from '../adapters/node/node-adapter';
+import { Request, ResponseType, RequestMethod, Transport, CreateTransportOptions } from './types';
+import createEventEmitter from '../lib/event-emitter/event-emitter';
+import { RequestEvents, ResponseEvents, Adapter } from '../adapters/adapter';
 
-export type Method =
-  | 'get'
-  | 'GET'
-  | 'delete'
-  | 'DELETE'
-  | 'head'
-  | 'HEAD'
-  | 'options'
-  | 'OPTIONS'
-  | 'post'
-  | 'POST'
-  | 'put'
-  | 'PUT'
-  | 'patch'
-  | 'PATCH';
-
-type ResponseType = 'json' | 'text' | 'arraybuffer';
-
-type BaseRequestOptions = {
-  url: string;
-} & Partial<{
-  method: Method;
-  baseUrl: string;
-  timeout: number;
-  responseType: ResponseType;
-  headers: Record<string, string>;
-  params: Record<string, any>;
-  cancelToken: string;
-}>;
-
-type Middleware<Request, Response> = (
-  next: (options: Request) => Promise<Response>,
-  options: Request,
-) => Promise<Response>;
-
-type Request<AdapterSettings> = BaseRequestOptions & {
-  adapter?: Adapter<AdapterSettings>;
-} & Omit<AdapterSettings, keyof BaseRequestOptions>;
-
-type Response<Type = 'json', T = any> = {
-  data: Type extends 'text' ? string : Type extends 'arraybuffer' ? ArrayBuffer : T;
-  status: number;
-  statusText: string;
-  headers: Record<string, string>;
+const isAbsoluteUrl = (url: string) => {
+  // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+  // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+  // by any combination of letters, digits, plus, period, or hyphen.
+  return /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
 };
 
-type CreateTransportOptions<ResType extends ResponseType, AdapterSettings> = {
-  adapter: Adapter<AdapterSettings>;
-  responseType?: ResType;
-  timeout: number;
-} & AdapterSettings;
+const combineUrls = (baseUrl: string, relativeUrl?: string) => {
+  return relativeUrl
+    ? `${baseUrl.replace(/\/+$/, '')}/${relativeUrl.replace(/^\/+/, '')}`
+    : baseUrl;
+};
 
-type NamedRequestConfig<T> = Omit<T, 'url' | 'method'>;
+const serializeParams = (params: Record<string, any>) => {
+  return Object.keys(params)
+    .map((key) => `${key}=${params[key]}`)
+    .join('&');
+};
 
-export interface Transport<ResType, AdapterSettings> {
-  (config: Request<AdapterSettings>): Promise<Response>;
-  (url: string, config?: Omit<Request<AdapterSettings>, 'url'>): Promise<Response>;
-  request<T = any, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
-    config: R,
-  ): Promise<Response<undefined extends R['responseType'] ? ResType : R['responseType'], T>>;
+const buildUrl = (
+  url: Request['url'],
+  baseUrl?: Request['baseUrl'],
+  params: Request['params'] = '',
+) => {
+  const fullUrl = baseUrl && !isAbsoluteUrl(url) ? combineUrls(baseUrl, url) : url;
+  const serializedParams = typeof params === 'string' ? params : serializeParams(params);
 
-  get<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  delete<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  head<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  post<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  put<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  patch<T = any, R = Request<AdapterSettings>>(
-    url: string,
-    config?: NamedRequestConfig<Request<AdapterSettings>>,
-  ): Promise<R>;
-  extend: {
-    (...layers: Middleware<Request<AdapterSettings>, Response>[]): Transport<
-      ResType,
-      AdapterSettings
-    >;
-    (config: Middleware<Request<AdapterSettings>, Response>): Transport<ResType, AdapterSettings>;
+  if (serializedParams) {
+    return fullUrl.split('#')[0] + (fullUrl.includes('?') ? '?' : '&') + serializedParams;
+  }
+
+  return fullUrl;
+};
+
+const makeRequest = <R extends Request & { adapter: Adapter<any> }>(config: R): Promise<any> => {
+  const url = buildUrl(config.url, config.baseUrl, config.params);
+
+  const baseRequest = {
+    ...config,
+    url,
+    method: config.method?.toUpperCase() || 'GET',
+    headers: config.headers || {},
   };
-}
+
+  const request = Object.assign(createEventEmitter<RequestEvents>(), baseRequest);
+  const response = createEventEmitter<ResponseEvents>();
+
+  config.adapter(request, response);
+
+  const textDecoder = new TextDecoder('utf-8');
+  const chunks: string[] = [];
+
+  response.on('data', (chunk) => {
+    if (typeof chunk === 'string') {
+      chunks.push(chunk);
+    } else {
+      chunks.push(textDecoder.decode(chunk));
+    }
+  });
+
+  return new Promise((resolve, reject) => {
+    response.on('end', () => {
+      resolve(JSON.parse(chunks.join('')));
+    });
+    response.on('error', reject);
+    request.on('error', reject);
+  });
+};
 
 const createTransport = <AdapterSettings, ResType extends ResponseType = 'json'>(
   options: CreateTransportOptions<ResType, AdapterSettings>,
-): Transport<ResType, AdapterSettings> => {
-  return (options as unknown) as any;
+) => {
+  const transport = {
+    request: makeRequest,
+  } as Transport<AdapterSettings, ResType>;
+  const requestMethods: RequestMethod[] = ['get', 'put', 'post', 'head', 'patch', 'delete'];
+
+  requestMethods.forEach((method) => {
+    transport[method] = (url, opts) => makeRequest({ ...options, ...opts, method, url } as any);
+  });
+
+  return transport;
 };
 
-async function main() {
-  const transport = createTransport({
-    adapter: nodeAdapter,
-    timeout: 100,
-  });
-
-  const response = await transport.request<number>({
-    url: '/test',
-  });
-
-  response.data;
-}
+export default createTransport;

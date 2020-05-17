@@ -27,8 +27,6 @@ export default async function createTestServer(handler?: http.RequestListener) {
     });
   };
 
-  await start();
-
   const stop = () => {
     return new Promise((resolve, reject) => {
       instance.close((error) => {

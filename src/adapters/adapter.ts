@@ -12,7 +12,9 @@ export type Method =
   | 'PATCH'
   | 'PURGE'
   | 'LINK'
-  | 'UNLINK';
+  | 'UNLINK'
+  // custom method support
+  | string;
 
 export type RequestEvents = {
   sent: () => void;
@@ -26,7 +28,6 @@ export type RequestEmitter<CustomSettings> = {
   headers: Record<string, string>;
   data?: any;
   withCredentials?: boolean;
-  responseType?: ResponseType;
   agent?: { http?: http.Agent; https?: https.Agent };
   // cancelToken?: CancelToken;
 } & CustomSettings &
@@ -34,7 +35,7 @@ export type RequestEmitter<CustomSettings> = {
 
 export type ResponseEvents = {
   head: (data: { status: number; statusText: string; headers: Record<string, string> }) => void;
-  end: (data?: Uint8Array) => void;
+  end: () => void;
   data: (data: Uint8Array) => void;
   error: (error: string | Error) => void;
 };
