@@ -17,7 +17,7 @@ export type Method =
   | 'PATCH'
   | string;
 
-export type ResponseType = 'json' | 'text' | 'arraybuffer';
+export type ResponseType = 'json' | 'text';
 
 type BaseRequest = {
   url: string;
@@ -33,10 +33,11 @@ type BaseRequest = {
 
 export type Request<AdapterSettings = {}> = BaseRequest & {
   adapter?: Adapter<AdapterSettings>;
+  middlwares?: Middleware<Request<AdapterSettings>, Response<any, BaseRequest['responseType']>>[];
 } & Omit<AdapterSettings, keyof BaseRequest>;
 
 export type Response<T = any, ResType extends ResponseType | undefined = 'json'> = {
-  data: ResType extends 'text' ? string : ResType extends 'arraybuffer' ? ArrayBuffer : T;
+  data: ResType extends 'text' ? string : T;
   status: number;
   statusText: string;
   headers: Record<string, string>;
@@ -50,8 +51,7 @@ type Middleware<Req = BaseRequest, Res = Response<any, any>> = (
 export type CreateTransportOptions<ResType extends ResponseType, AdapterSettings> = {
   adapter: Adapter<AdapterSettings>;
   responseType?: ResType;
-  timeout: number;
-} & AdapterSettings;
+} & Omit<Request<AdapterSettings>, 'url' | 'adapter'>;
 
 export type CreateTransport = <AdapterSettings, ResType extends ResponseType = 'json'>(
   options: CreateTransportOptions<ResType, AdapterSettings>,
@@ -76,11 +76,14 @@ export type Transport<AdapterSettings, ResType extends ResponseType = 'json'> = 
     config: R,
   ): Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>;
   extend: {
-    (...layers: Middleware<Request<AdapterSettings>, Response<any, ResType>>[]): Transport<
+    (...middlwares: Middleware<Request<AdapterSettings>, Response<any, ResType>>[]): Transport<
       AdapterSettings,
       ResType
     >;
   };
+  stream<T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
+    config: R,
+  ): ReadableStream<T>;
 } & Record<
   RequestMethod,
   <
