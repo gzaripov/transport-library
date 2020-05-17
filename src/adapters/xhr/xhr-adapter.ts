@@ -6,16 +6,6 @@ type XhrRequest = {
   responseType: XMLHttpRequestResponseType;
 };
 
-type XhrResponse<Request extends XhrRequest, DataType> = Request['responseType'] extends 'json'
-  ? DataType
-  : Request['responseType'] extends 'arraybuffer'
-  ? ArrayBuffer
-  : Request['responseType'] extends 'blob'
-  ? Blob
-  : Request['responseType'] extends 'document'
-  ? Document | undefined
-  : string;
-
 const xhrAdapter: Adapter<XhrRequest> = (request, response) => {
   const xhr = new XMLHttpRequest();
 
@@ -26,6 +16,30 @@ const xhrAdapter: Adapter<XhrRequest> = (request, response) => {
 
   let seenBytes = 0;
 
+  const headersRecieved = () => {
+    const rawHeaders = xhr.getAllResponseHeaders();
+    const headersRows = rawHeaders.trim().split(/[\r\n]+/);
+
+    const headers: Record<string, string> = {};
+
+    headersRows.forEach((line) => {
+      const [header, ...values] = line.split(': ');
+      headers[header] = values.join(': ');
+    });
+
+    response.emit('head', {
+      status: xhr.status,
+      statusText: xhr.statusText,
+      headers,
+    });
+  };
+
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === xhr.HEADERS_RECEIVED) {
+      headersRecieved();
+    }
+  };
+
   xhr.onprogress = () => {
     const newData = xhr.response.substr(seenBytes);
     seenBytes = xhr.responseText.length;
@@ -34,7 +48,8 @@ const xhrAdapter: Adapter<XhrRequest> = (request, response) => {
   };
 
   xhr.onload = () => {
-    response.emit('end', xhr.response);
+    // response.emit('data', xhr.response);
+    response.emit('end');
   };
 
   xhr.withCredentials = request.withCredentials;
