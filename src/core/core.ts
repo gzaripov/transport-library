@@ -85,8 +85,10 @@ const createTransport = <AdapterSettings, ResType extends ResponseType = 'json'>
 ) => {
   const transport = {
     request: (opts) => {
-      const defaultOptions = { ...options, ...opts, middlwares: [] } as any;
-      const request = (newOpts = defaultOptions) => makeRequest(newOpts);
+      const defaultOptions = { ...options, ...opts, middlwares: [] };
+      const request = (
+        newOpts: CreateTransportOptions<ResType, AdapterSettings> = defaultOptions,
+      ) => makeRequest(newOpts);
 
       const layers = [
         ...(options.middlwares! || []).reverse(),
