@@ -35,7 +35,7 @@ export type BaseRequest = {
 export type Request<T = {}> = BaseRequest & {
   adapter?: Adapter<T>;
   middlewares?: Middleware<Request<T>, Response<any, Request<T>['responseType']>>[];
-} & Omit<T, keyof BaseRequest>;
+} & Partial<Omit<T, keyof BaseRequest>>;
 
 export type Response<T = any, ResType extends ResponseType | undefined = 'json'> = {
   data: ResType extends 'text' ? string : T;
