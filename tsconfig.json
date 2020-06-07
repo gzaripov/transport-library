@@ -9,10 +9,10 @@
     "esModuleInterop": true,
     "noUnusedLocals": true,
     "noImplicitAny": true,
-    "declarationDir": "dist/types",
-    "declaration": true,
+    "declaration": false,
     "target": "es2019",
     "module": "es2015",
+    "resolveJsonModule": true,
     "strict": true
   },
   "exclude": ["node_modules", "dist"],

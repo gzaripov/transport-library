@@ -2,7 +2,7 @@ import http from 'http';
 import https from 'https';
 import { Emitter } from '../lib/event-emitter/event-emitter';
 
-export type Method =
+type Method =
   | 'GET'
   | 'DELETE'
   | 'HEAD'

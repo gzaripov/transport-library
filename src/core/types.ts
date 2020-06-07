@@ -15,6 +15,7 @@ export type Method =
   | 'PUT'
   | 'patch'
   | 'PATCH'
+  // custom method support
   | string;
 
 export type ResponseType = 'json' | 'text';
