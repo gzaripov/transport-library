@@ -1,4 +1,4 @@
-import createTransport from './core';
+import createTransport from './create-transport';
 import withServer from '../../test/fixtures/with-server';
 import { nodeAdapter } from '../adapters/node/node-adapter';
 
@@ -44,7 +44,7 @@ describe('Core test', () => {
     expect(response.data).toStrictEqual('{"test":{"json":{}}}');
   });
 
-  it('should allow make middlwares', async () => {
+  it('should allow make middlewares', async () => {
     const transport = createTransport({
       adapter: nodeAdapter,
       responseType: 'text',
@@ -54,7 +54,7 @@ describe('Core test', () => {
       async (baseUrl) => {
         return transport.request({
           url: '/test',
-          middlwares: [
+          middlewares: [
             async (request) => {
               const res = await request();
 

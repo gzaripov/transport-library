@@ -19,7 +19,7 @@ export type Method =
 
 export type ResponseType = 'json' | 'text';
 
-type BaseRequest = {
+export type BaseRequest = {
   url: string;
 } & Partial<{
   method: Method;
@@ -33,7 +33,10 @@ type BaseRequest = {
 
 export type Request<AdapterSettings = {}> = BaseRequest & {
   adapter?: Adapter<AdapterSettings>;
-  middlwares?: Middleware<Request<AdapterSettings>, Response<any, BaseRequest['responseType']>>[];
+  middlewares?: Middleware<
+    Request<AdapterSettings>,
+    Response<any, Request<AdapterSettings>['responseType']>
+  >[];
 } & Omit<AdapterSettings, keyof BaseRequest>;
 
 export type Response<T = any, ResType extends ResponseType | undefined = 'json'> = {
@@ -43,7 +46,7 @@ export type Response<T = any, ResType extends ResponseType | undefined = 'json'>
   headers: Record<string, string>;
 };
 
-type Middleware<Req = BaseRequest, Res = Response<any, any>> = (
+export type Middleware<Req = BaseRequest, Res = Response<any, any>> = (
   next: (options?: Req) => Promise<Res>,
   options: Req,
 ) => Promise<Res>;
@@ -71,26 +74,27 @@ type InferResponseType<
 
 export type RequestMethod = 'get' | 'put' | 'delete' | 'head' | 'post' | 'patch';
 
-export type Transport<AdapterSettings, ResType extends ResponseType = 'json'> = {
-  request<T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
+export type Transport<AdapterSettings = {}, ResType extends ResponseType = 'json'> = {
+  request: <T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
     config: R,
-  ): Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>;
+  ) => Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>;
   extend: {
-    (...middlwares: Middleware<Request<AdapterSettings>, Response<any, ResType>>[]): Transport<
+    <R extends Request<AdapterSettings> = Request<AdapterSettings>>(config: R): Transport<
+      undefined extends R['adapter'] ? AdapterSettings : NonNullable<R['adapter']>,
+      undefined extends R['responseType'] ? ResType : NonNullable<R['responseType']>
+    >;
+    (...middlewares: Middleware<Request<AdapterSettings>, Response<any, ResType>>[]): Transport<
       AdapterSettings,
       ResType
     >;
   };
-  stream<T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
-    config: R,
-  ): ReadableStream<T>;
+  // stream<T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
+  //   config: R,
+  // ): ReadableStream<T>;
 } & Record<
   RequestMethod,
-  <
-    T = TypeNotPassed,
-    R extends Omit<Request<AdapterSettings>, 'url' | 'method'> = Request<AdapterSettings>
-  >(
+  <T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
     url: string,
-    config?: R,
+    config: R,
   ) => Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>
 >;
