@@ -34,7 +34,7 @@ export type BaseRequest = {
 
 export type Request<T = {}> = BaseRequest & {
   adapter?: Adapter<T>;
-  middlewares?: Middleware<Request<T>, Response<any, Request<T>['responseType']>>[];
+  middlewares?: Middleware<Request<T>, Response<any, BaseRequest['responseType']>>[];
 } & Partial<Omit<T, keyof BaseRequest>>;
 
 export type Response<T = any, ResType extends ResponseType | undefined = 'json'> = {
@@ -83,6 +83,9 @@ export type Transport<T = {}, ResType extends ResponseType = 'json'> = {
     >;
     (...middlewares: Middleware<Request<T>, Response<any, ResType>>[]): Transport<T, ResType>;
   };
+  stream<Stream = TypeNotPassed, Req extends Request<T> = Request<T>>(
+    config: Req,
+  ): ReadableStream<Stream>;
 } & Record<
   RequestMethod,
   <Req extends Request<T> = Request<T>, Res = TypeNotPassed>(
