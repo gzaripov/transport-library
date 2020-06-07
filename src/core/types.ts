@@ -32,13 +32,10 @@ export type BaseRequest = {
   cancelToken: string;
 }>;
 
-export type Request<AdapterSettings = {}> = BaseRequest & {
-  adapter?: Adapter<AdapterSettings>;
-  middlewares?: Middleware<
-    Request<AdapterSettings>,
-    Response<any, Request<AdapterSettings>['responseType']>
-  >[];
-} & Omit<AdapterSettings, keyof BaseRequest>;
+export type Request<T = {}> = BaseRequest & {
+  adapter?: Adapter<T>;
+  middlewares?: Middleware<Request<T>, Response<any, Request<T>['responseType']>>[];
+} & Omit<T, keyof BaseRequest>;
 
 export type Response<T = any, ResType extends ResponseType | undefined = 'json'> = {
   data: ResType extends 'text' ? string : T;
@@ -52,14 +49,14 @@ export type Middleware<Req = BaseRequest, Res = Response<any, any>> = (
   options: Req,
 ) => Promise<Res>;
 
-export type CreateTransportOptions<ResType extends ResponseType, AdapterSettings> = {
-  adapter: Adapter<AdapterSettings>;
+export type CreateTransportOptions<ResType extends ResponseType, T> = {
+  adapter: Adapter<T>;
   responseType?: ResType;
-} & Omit<Request<AdapterSettings>, 'url' | 'adapter'>;
+} & Omit<Request<T>, 'url' | 'adapter'>;
 
-export type CreateTransport = <AdapterSettings, ResType extends ResponseType = 'json'>(
-  options: CreateTransportOptions<ResType, AdapterSettings>,
-) => Transport<AdapterSettings, ResType>;
+export type CreateTransport = <T, ResType extends ResponseType = 'json'>(
+  options: CreateTransportOptions<ResType, T>,
+) => Transport<T, ResType>;
 
 type TypeNotPassed = { _response_type_not_passed: true };
 
@@ -75,27 +72,21 @@ type InferResponseType<
 
 export type RequestMethod = 'get' | 'put' | 'delete' | 'head' | 'post' | 'patch';
 
-export type Transport<AdapterSettings = {}, ResType extends ResponseType = 'json'> = {
-  request: <T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
-    config: R,
-  ) => Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>;
+export type Transport<T = {}, ResType extends ResponseType = 'json'> = {
+  request: <Req extends Request<T> = Request<T>, Res = TypeNotPassed>(
+    config: Req,
+  ) => Promise<Response<Res, InferResponseType<Res, Req['responseType'], ResType>>>;
   extend: {
-    <R extends Request<AdapterSettings> = Request<AdapterSettings>>(config: R): Transport<
-      undefined extends R['adapter'] ? AdapterSettings : NonNullable<R['adapter']>,
+    <R extends Request<T> = Request<T>>(config: R): Transport<
+      undefined extends R['adapter'] ? T : NonNullable<R['adapter']>,
       undefined extends R['responseType'] ? ResType : NonNullable<R['responseType']>
     >;
-    (...middlewares: Middleware<Request<AdapterSettings>, Response<any, ResType>>[]): Transport<
-      AdapterSettings,
-      ResType
-    >;
+    (...middlewares: Middleware<Request<T>, Response<any, ResType>>[]): Transport<T, ResType>;
   };
-  // stream<T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
-  //   config: R,
-  // ): ReadableStream<T>;
 } & Record<
   RequestMethod,
-  <T = TypeNotPassed, R extends Request<AdapterSettings> = Request<AdapterSettings>>(
+  <Req extends Request<T> = Request<T>, Res = TypeNotPassed>(
     url: string,
-    config: R,
-  ) => Promise<Response<T, InferResponseType<T, R['responseType'], ResType>>>
+    config: Req,
+  ) => Promise<Response<Res, InferResponseType<Res, Req['responseType'], ResType>>>
 >;
