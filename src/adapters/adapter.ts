@@ -1,5 +1,3 @@
-import http from 'http';
-import https from 'https';
 import { Emitter } from '../lib/event-emitter/event-emitter';
 
 type Method =
@@ -22,15 +20,13 @@ export type RequestEvents = {
   error: (error: string | Error) => void;
 };
 
-export type RequestEmitter<CustomSettings> = {
+export type Request<T> = {
   url: string;
   method: Method;
   headers: Record<string, string>;
-  data?: any;
-  withCredentials?: boolean;
-  agent?: { http?: http.Agent; https?: https.Agent };
-} & CustomSettings &
-  Emitter<RequestEvents>;
+} & T;
+
+export type RequestEmitter<T> = Request<T> & Emitter<RequestEvents>;
 
 export type ResponseEvents = {
   head: (data: { status: number; statusText: string; headers: Record<string, string> }) => void;
@@ -40,11 +36,6 @@ export type ResponseEvents = {
 
 export type ResponseEmitter = Emitter<ResponseEvents>;
 
-export type StreamAdapter<RequestConfig, StreamType> = (
-  request: RequestEmitter<RequestConfig>,
-) => StreamType;
+export type StreamAdapter<T, StreamType> = (request: RequestEmitter<T>) => StreamType;
 
-export type Adapter<RequestConfig> = (
-  request: RequestEmitter<RequestConfig>,
-  response: ResponseEmitter,
-) => void;
+export type Adapter<T, R = void> = (request: RequestEmitter<T>, response: ResponseEmitter) => R;

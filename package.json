@@ -57,5 +57,8 @@
     "semantic-release": "^17.0.4",
     "ts-jest": "^26.0.0",
     "typescript": "^3.9.3"
+  },
+  "dependencies": {
+    "http-status-codes": "^1.4.0"
   }
 }
