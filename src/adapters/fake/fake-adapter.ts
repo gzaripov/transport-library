@@ -31,8 +31,11 @@ type Handlers = {
 };
 
 type MatcherFn = (request: AnyRequest & { pathname: string }) => boolean;
-type Matcher = string | RegExp | MatcherFn | undefined;
-type Query = (matcher?: Matcher) => Handlers;
+type Query = (matcher?: string | RegExp | MatcherFn) => Handlers;
+// We do this because typescript can't unwrap type in suggestions.
+// Developer sees signature (matcher?: Matcher) instead of (matcher?: string | RegExp | MatcherFn)
+// to avoid this we put original signature to function and extract type to use it in code
+type Matcher = Parameters<Query>[0];
 
 type FakeMethods = {
   onGet: Query;
@@ -107,15 +110,7 @@ const networkError: Handler = () => (request) => {
   request.emit('error', 'Network error');
 };
 
-const passThrough: Handler = ({ adapter }: { adapter?: Adapter<AnyRequest> } = {}): Adapter<
-  AnyRequest
-> => (request, response) => {
-  if (!adapter) {
-    throw new Error('Specify adapter to pass through to MockAdapter options');
-  }
-
-  adapter(request, response);
-};
+const passThrough: Handler = () => () => {};
 
 const handlers: Record<string, Handler> = {
   reply,
@@ -129,12 +124,6 @@ type FakeAdapterFn = (options?: {
   adapter?: Adapter<AnyRequest>;
   delayResponse?: number;
 }) => FakeAdapter;
-
-// const onceHandler: Adapter<AnyRequest> = (request, response) => {
-//   registeredHandlers = registeredHandlers.filter((h) => h !== onceHandler);
-
-//   handler(...args)(request, response);
-// };
 
 function isUrlMatching(url1: string, url2: string) {
   const noSlashUrl = url1[0] === '/' ? url1.substr(1) : url1;
@@ -155,15 +144,19 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
     method: string;
     matcher: Matcher;
     handler: Adapter<AnyRequest>;
+    handlerType: string;
   }[] = [];
 
-  const registerHandler = (handler: Handler, { once }: { once: boolean }) => (...args: any[]) => {
+  const registerHandler = (type: string, handler: Handler, { once }: { once: boolean }) => (
+    ...args: any[]
+  ) => {
     if (currentMatcher === null) {
       throw new Error('Cannot find matcher, have you called query function e.g. onGet bef?');
     }
 
     registeredHandlers.push({
       once,
+      handlerType: type,
       method: currentMethod,
       matcher: currentMatcher,
       handler: handler(...args),
@@ -173,8 +166,8 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
   };
 
   Object.keys(handlers).forEach((handler) => {
-    allHandlers[handler] = registerHandler(handlers[handler], { once: false });
-    allHandlers[`${handler}Once`] = registerHandler(handlers[handler], { once: true });
+    allHandlers[handler] = registerHandler(handler, handlers[handler], { once: false });
+    allHandlers[`${handler}Once`] = registerHandler(handler, handlers[handler], { once: true });
   });
 
   METHODS.forEach((method) => {
@@ -219,20 +212,39 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
       });
     });
 
+    if (!handler) {
+      request.emit(
+        'error',
+        new Error(`Cannot find handler for request: ${request.method} ${request.url}`),
+      );
+
+      return;
+    }
+
+    if (handler.handlerType === 'passThrough') {
+      if (!adapter) {
+        throw new Error('Specify adapter to pass through to MockAdapter options');
+      }
+
+      adapter(request, response);
+
+      return;
+    }
+
     request.emit('sent');
 
-    // response.emit('head', {
-    //   status: response.status,
-    //   statusText: res.statusText,
-    //   headers: Object.fromEntries(res.headers.entries()),
-    // });
+    if (delayResponse) {
+      setTimeout(() => {
+        handler.handler(request, response);
+      }, delayResponse);
 
-    // response.emit('text', text);
-    request.emit('error', 'error');
-    response.emit('error', 'errror');
+      return;
+    }
+
+    handler.handler(request, response);
   };
 
   return fakeApi;
 };
 
-export const a = 2;
+export default fakeAdapter;
