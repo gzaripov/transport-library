@@ -54,7 +54,7 @@ describe('Core test', () => {
       async (baseUrl) => {
         return transport.request({
           url: '/test',
-          middlwares: [
+          middlewares: [
             async (request) => {
               const res = await request();
 

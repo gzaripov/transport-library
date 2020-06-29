@@ -2,11 +2,11 @@ import { RequestMethod, Transport, Response, Request, Middleware, CreateTranspor
 import makeRequest from './make-request';
 
 const applyMiddlewares = (
-  request: (req: Request) => Promise<Response<any, any>>,
-  middlewares: Middleware<Request, Response<any, any>>[],
+  request: (req: Request) => Promise<Response>,
+  middlewares: Middleware<Request, Response>[],
 ) => {
   const layers = middlewares.slice().reverse();
-  let currentLayer = request as (req: Request) => Promise<Response<any, any>>;
+  let currentLayer = request as (req: Request) => Promise<Response>;
 
   layers.forEach((layer) => {
     const previousLayer = currentLayer;
