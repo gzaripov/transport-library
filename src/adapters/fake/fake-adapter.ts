@@ -1,62 +1,19 @@
 import { getStatusText } from 'http-status-codes';
-import { URL } from 'url';
+import matchHandler from './match-handler';
 import { Adapter } from '..';
-import { Request } from '../adapter';
+import {
+  NO_MATCHER,
+  Handler,
+  ReplyHandler,
+  AnyRequest,
+  FakeAdapter,
+  Matcher,
+  RegisteredHandler,
+  FakeMethods,
+  Handlers,
+} from './types';
 
 const METHODS = ['get', 'post', 'head', 'delete', 'patch', 'put', 'options', 'list', 'any'];
-
-type AnyRequest = Request<Record<string, any>>;
-
-type ReplyHandlerData = {
-  status: number;
-  data?: any;
-  headers?: Record<string, string>;
-};
-
-type ReplyHandler = (request: AnyRequest) => ReplyHandlerData | Promise<ReplyHandlerData>;
-
-type Reply = (statusOrCallback: number | ReplyHandler, data?: any, headers?: any) => FakeAdapter;
-
-type Handlers = {
-  reply: Reply;
-  replyOnce: Reply;
-  timeout(): FakeAdapter;
-  timeoutOnce(): FakeAdapter;
-  abortRequest(): FakeAdapter;
-  abortRequestOnce(): FakeAdapter;
-  networkError(): FakeAdapter;
-  networkErrorOnce(): FakeAdapter;
-  passThrough(): FakeAdapter;
-  passThroughOnce(): FakeAdapter;
-};
-
-type MatcherFn = (request: AnyRequest & { pathname: string }) => boolean;
-type Query = (matcher?: string | RegExp | MatcherFn) => Handlers;
-// We do this because typescript can't unwrap type in suggestions.
-// Developer sees signature (matcher?: Matcher) instead of (matcher?: string | RegExp | MatcherFn)
-// to avoid this we put original signature to function and extract type to use it in code
-type Matcher = Parameters<Query>[0];
-
-type FakeMethods = {
-  onGet: Query;
-  onPost: Query;
-  onPut: Query;
-  onHead: Query;
-  onDelete: Query;
-  onPatch: Query;
-  onList: Query;
-  onAny: Query;
-};
-
-type FakeAdapter = {
-  reset(): void;
-  restore(): void;
-  adapter: Adapter<AnyRequest>;
-
-  history: { [method: string]: AnyRequest[] };
-} & FakeMethods;
-
-type Handler = (...args: any[]) => Adapter<AnyRequest>;
 
 const reply: Handler = (
   statusOrCallback: number | ReplyHandler,
@@ -125,33 +82,21 @@ type FakeAdapterFn = (options?: {
   delayResponse?: number;
 }) => FakeAdapter;
 
-function isUrlMatching(url1: string, url2: string) {
-  const noSlashUrl = url1[0] === '/' ? url1.substr(1) : url1;
-  const noSlashRequired = url2[0] === '/' ? url2.substr(1) : url2;
-  return noSlashUrl === noSlashRequired;
-}
-
 export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
-  let currentMatcher: Matcher | null = null;
+  let currentMatcher: Matcher | typeof NO_MATCHER | null = null;
   let currentMethod: string = 'any';
 
   const fakeApi = {} as FakeAdapter;
 
   const allHandlers: Record<string, (...args: any[]) => FakeAdapter> = {};
 
-  const registeredHandlers: {
-    once: boolean;
-    method: string;
-    matcher: Matcher;
-    handler: Adapter<AnyRequest>;
-    handlerType: string;
-  }[] = [];
+  const registeredHandlers: RegisteredHandler[] = [];
 
   const registerHandler = (type: string, handler: Handler, { once }: { once: boolean }) => (
     ...args: any[]
   ) => {
     if (currentMatcher === null) {
-      throw new Error('Cannot find matcher, have you called query function e.g. onGet bef?');
+      throw new Error('Cannot find matcher, have you called query function e.g. onGet before?');
     }
 
     registeredHandlers.push({
@@ -175,42 +120,14 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
 
     fakeApi[methodName] = (matcher) => {
       currentMethod = method;
-      currentMatcher = matcher;
+      currentMatcher = matcher || NO_MATCHER;
 
       return allHandlers as Handlers;
     };
   });
 
-  // TODO: finish mock adapter, add text to debug library
   fakeApi.adapter = (request, response) => {
-    const handler = registeredHandlers.find(({ method, matcher }) => {
-      if (method !== 'any' && request.method !== method) {
-        return false;
-      }
-
-      const { pathname } = new URL(request.url);
-
-      if (typeof matcher === 'function') {
-        return Boolean(
-          matcher({
-            ...request,
-            pathname,
-          }),
-        );
-      }
-
-      return [request.url, pathname].some((url) => {
-        if (typeof matcher === 'string') {
-          return isUrlMatching(url, matcher);
-        }
-
-        if (matcher instanceof RegExp) {
-          return matcher.test(url);
-        }
-
-        return false;
-      });
-    });
+    const handler = matchHandler(request, registeredHandlers);
 
     if (!handler) {
       request.emit(
