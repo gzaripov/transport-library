@@ -22,17 +22,20 @@ export type ResponseType = 'json' | 'text';
 
 export type BaseRequest = {
   url: string;
-} & Partial<{
-  method: Method;
-  baseUrl: string;
-  timeout: number;
-  responseType: ResponseType;
-  headers: Record<string, string>;
-  params: Record<string, any> | string;
-  cancelToken: string;
-}>;
-
+  method?: Method;
+  baseUrl?: string;
+  timeout?: number;
+  responseType?: ResponseType;
+  headers?: Record<string, string>;
+  params?: Record<string, any> | string;
+  cancelToken?: string;
+};
 export type Request<T = {}> = BaseRequest & {
+  adapter: Adapter<T>;
+  middlewares?: Middleware<Request<T>, Response>[];
+} & Partial<Omit<T, keyof BaseRequest>>;
+
+export type RequestConfig<T = {}> = BaseRequest & {
   adapter?: Adapter<T>;
   middlewares?: Middleware<Request<T>, Response>[];
 } & Partial<Omit<T, keyof BaseRequest>>;
@@ -49,22 +52,21 @@ export type Middleware<Req = BaseRequest, Res = Response> = (
   options: Req,
 ) => Promise<Res>;
 
-export type CreateTransportOptions<T> = {
-  adapter: Adapter<T>;
+export type CreateTransportOptions<T> = Omit<Request<T>, 'url'> & {
   responseType?: ResponseType;
-} & Omit<Request<T>, 'url' | 'adapter'>;
+};
 
 export type CreateTransport = <T>(options: CreateTransportOptions<T>) => Transport<T>;
 
 export type RequestMethod = 'get' | 'put' | 'delete' | 'head' | 'post' | 'patch';
 
-export type Transport<ReqType = {}> = {
-  request: <T>(config: Request<ReqType>) => Promise<Response<T>>;
+export type Transport<R = {}> = {
+  request: <T>(config: RequestConfig<R>) => Promise<Response<T>>;
   extend: {
-    <R extends Request<ReqType> = Request<ReqType>>(config: R): Transport<
-      undefined extends R['adapter'] ? ReqType : NonNullable<R['adapter']>
+    <C extends RequestConfig<R> = RequestConfig<R>>(config: C): Transport<
+      undefined extends C['adapter'] ? R : NonNullable<C['adapter']>
     >;
-    (...middlewares: Middleware<Request<ReqType>, Response<any>>[]): Transport<ReqType>;
+    (...middlewares: Middleware<Request<R>, Response<any>>[]): Transport<R>;
   };
-  stream<T>(config: Request<ReqType>): ReadableStream<T>;
-} & Record<RequestMethod, <T>(url: string, config?: Request<ReqType>) => Promise<Response<T>>>;
+  stream<T>(config: RequestConfig<R>): ReadableStream<T>;
+} & Record<RequestMethod, <T>(url: string, config?: RequestConfig<R>) => Promise<Response<T>>>;

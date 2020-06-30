@@ -1,15 +1,15 @@
-import { RequestMethod, Transport, CreateTransportOptions } from './types';
+import { RequestMethod, Transport, CreateTransportOptions, Request } from './types';
 import makeRequest from './make-request';
 
 const createTransport = <T>(options: CreateTransportOptions<T>) => {
   const transport = {
     request: (opts) => {
       const defaultOptions = { ...options, ...opts, middlwares: [] };
-      const request = (newOpts: CreateTransportOptions<T> = defaultOptions) => makeRequest(newOpts);
+      const request = (newOpts: Request<T> = defaultOptions) => makeRequest(newOpts);
 
       const layers = [
-        ...(options.middlwares! || []).reverse(),
-        ...(opts.middlwares || []).reverse(),
+        ...(options.middlewares! || []).reverse(),
+        ...(opts.middlewares || []).reverse(),
       ];
 
       if (!layers.length) {

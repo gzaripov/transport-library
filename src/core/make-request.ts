@@ -1,9 +1,9 @@
-import { Request, Response } from './types';
+import { Response, Request } from './types';
 import createEventEmitter from '../lib/event-emitter/event-emitter';
-import { RequestEvents, ResponseEvents, Adapter } from '../adapters/adapter';
+import { RequestEvents, ResponseEvents } from '../adapters/adapter';
 import buildUrl from './build-url';
 
-const makeRequest = <R extends Request & { adapter: Adapter<any> }>(config: R): Promise<any> => {
+const makeRequest = <R extends Request<any>>(config: R): Promise<any> => {
   const url = buildUrl(config.url, config.baseUrl, config.params);
 
   const baseRequest = {

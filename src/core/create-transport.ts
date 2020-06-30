@@ -1,12 +1,12 @@
-import { RequestMethod, Transport, Response, Request, Middleware, CreateTransport } from './types';
+import { RequestMethod, Transport, Response, Middleware, CreateTransport, Request } from './types';
 import makeRequest from './make-request';
 
 const applyMiddlewares = (
-  request: (req: Request) => Promise<Response>,
+  request: (req: Request<any>) => Promise<Response>,
   middlewares: Middleware<Request, Response>[],
 ) => {
   const layers = middlewares.slice().reverse();
-  let currentLayer = request as (req: Request) => Promise<Response>;
+  let currentLayer = request as (req: Request<any>) => Promise<Response>;
 
   layers.forEach((layer) => {
     const previousLayer = currentLayer;
@@ -22,7 +22,7 @@ const createTransport: CreateTransport = (options) => {
     const defaultOptions = { ...options, ...opts };
 
     return applyMiddlewares(
-      makeRequest as (req: Request) => Promise<Response>,
+      makeRequest as (req: Request<any>) => Promise<Response>,
       opts.middlewares || [],
     )(defaultOptions);
   };
