@@ -16,8 +16,6 @@ const makeRequest = <R extends Request<any>>(config: R): Promise<any> => {
   const request = Object.assign(createEventEmitter<RequestEvents>(), baseRequest);
   const response = createEventEmitter<ResponseEvents>();
 
-  config.adapter(request, response);
-
   return new Promise((resolve, reject) => {
     const responseObject = {} as Response;
 
@@ -37,6 +35,8 @@ const makeRequest = <R extends Request<any>>(config: R): Promise<any> => {
     });
     response.on('error', reject);
     request.on('error', reject);
+
+    config.adapter(request, response);
   });
 };
 
