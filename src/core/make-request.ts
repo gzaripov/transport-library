@@ -9,6 +9,7 @@ const makeRequest = <R extends Request<any>>(config: R): Promise<any> => {
   const baseRequest = {
     ...config,
     url,
+    responseType: config.responseType || 'json',
     method: config.method?.toUpperCase() || 'GET',
     headers: config.headers || {},
   };

@@ -20,7 +20,7 @@ const reply: Handler = (
   data?: any,
   headers?: any,
 ) => async (request, response) => {
-  const text = (d?: any) => {
+  const text = (d: any = request.responseType === 'json' ? {} : '') => {
     if (!d) {
       return '';
     }

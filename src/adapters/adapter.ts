@@ -24,6 +24,7 @@ export type Request<T> = {
   url: string;
   method: Method;
   headers: Record<string, string>;
+  responseType: 'json' | 'text';
 } & T;
 
 export type RequestEmitter<T> = Request<T> & Emitter<RequestEvents>;

@@ -9,7 +9,7 @@ function isUrlMatching(url1: string, url2: string) {
 
 export default function matchHandler(request: any, handlers: RegisteredHandler[]) {
   return handlers.find(({ method, matcher }) => {
-    if (method !== 'any' && request.method !== method) {
+    if (method !== 'any' && request.method !== method.toUpperCase()) {
       return false;
     }
 

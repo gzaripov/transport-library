@@ -4,7 +4,7 @@ import createFakeAdapter from './fake-adapter';
 describe('Fake adapter', () => {
   jest.setTimeout(100);
 
-  it.only('should allow fake requests', async () => {
+  it('should allow fake requests', async () => {
     const fakeAdapter = createFakeAdapter();
     const transport = createTransport({
       adapter: fakeAdapter.adapter,
@@ -14,8 +14,6 @@ describe('Fake adapter', () => {
 
     const response = await transport.get('/test');
 
-    console.log(response);
-
-    expect('').toBe('');
+    expect(response.data).toEqual({});
   });
 });
