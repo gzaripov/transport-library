@@ -1,6 +1,6 @@
 import { getStatusText } from 'http-status-codes';
 import matchHandler from './match-handler';
-import { Adapter } from '..';
+import { Adapter } from '../adapter';
 import {
   NO_MATCHER,
   Handler,

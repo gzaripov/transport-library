@@ -1,5 +1,4 @@
-import { Adapter } from '..';
-import { Request } from '../adapter';
+import { Adapter, Request } from '../adapter';
 
 export type AnyRequest = Request<Record<string, any>>;
 export type Handler = (...args: any[]) => Adapter<AnyRequest>;
