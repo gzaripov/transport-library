@@ -1,5 +1,4 @@
 import http from 'http';
-import getPort from 'get-port';
 
 export default async function createTestServer(handler?: http.RequestListener) {
   const instance = http.createServer(
@@ -10,17 +9,12 @@ export default async function createTestServer(handler?: http.RequestListener) {
       }),
   );
 
-  const hostname = 'localhost' as string;
-  const port = await getPort();
-  const host = `localhost:${port}`;
-  const url = `http://${host}`;
+  const hostname = 'localhost';
 
   const start = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       try {
-        instance.listen(port, hostname, () => {
-          resolve();
-        });
+        instance.listen(0, hostname, resolve);
       } catch (error) {
         reject(error);
       }
@@ -28,7 +22,7 @@ export default async function createTestServer(handler?: http.RequestListener) {
   };
 
   const stop = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       instance.close((error) => {
         if (error) {
           reject(error);
@@ -38,6 +32,18 @@ export default async function createTestServer(handler?: http.RequestListener) {
       });
     });
   };
+
+  await start();
+
+  const address = instance.address();
+
+  if (!address || typeof address !== 'object') {
+    throw new Error(`type of address is not object, it is ${typeof address}, value is: ${address}`);
+  }
+
+  const port = address?.port!;
+  const host = `localhost:${port}`;
+  const url = `http://${host}`;
 
   return {
     instance,

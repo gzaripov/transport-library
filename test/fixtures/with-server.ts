@@ -11,8 +11,6 @@ export default async function withServer<T>(
 ) {
   const server = await createTestServer(handler);
 
-  await server.start();
-
   const result = await cb(server.url);
 
   await server.stop();
