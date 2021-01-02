@@ -1,9 +1,23 @@
 import { Response, Request } from './types';
 import createEventEmitter from '../lib/event-emitter/event-emitter';
-import { RequestEvents, ResponseEvents } from '../adapters/adapter';
+import { Adapter, RequestEvents, ResponseEvents } from '../adapters/adapter';
 import buildUrl from './build-url';
 
-const makeRequest = <R extends Request<any>>(config: R): Promise<any> => {
+type Validate = <T>(conifg: Request<T>) => asserts conifg is Request<T> & { adapter: Adapter<T> };
+
+const validate: Validate = (config) => {
+  if (!config.url && !config.baseUrl) {
+    throw new Error('Neither url nor baseUrl are passed, cannot build url');
+  }
+
+  if (!config.adapter) {
+    throw new Error('Cannot send request without adapter');
+  }
+};
+
+const makeRequest = <T>(config: Request<T>): Promise<any> => {
+  validate(config);
+
   const url = buildUrl(config.url, config.baseUrl, config.params);
 
   const baseRequest = {

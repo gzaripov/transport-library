@@ -20,11 +20,12 @@ const serializeParams = (params: Record<string, any>) => {
 };
 
 const buildUrl = (
-  url: RequestConfig['url'],
+  url: RequestConfig['url'] = '',
   baseUrl?: RequestConfig['baseUrl'],
   params: RequestConfig['params'] = '',
 ) => {
-  const fullUrl = baseUrl && !isAbsoluteUrl(url) ? combineUrls(baseUrl, url) : url;
+  const fullUrl = baseUrl && url && !isAbsoluteUrl(url) ? combineUrls(baseUrl, url) : url;
+
   const serializedParams = typeof params === 'string' ? params : serializeParams(params);
 
   if (serializedParams) {

@@ -20,8 +20,8 @@ export type Method =
 
 export type ResponseType = 'json' | 'text';
 
-export type BaseRequest = {
-  url: string;
+export type Request<T = {}> = {
+  url?: string;
   method?: Method;
   baseUrl?: string;
   timeout?: number;
@@ -29,16 +29,14 @@ export type BaseRequest = {
   headers?: Record<string, string>;
   params?: Record<string, any> | string;
   cancelToken?: string;
-};
-export type Request<T = {}> = BaseRequest & {
-  adapter: Adapter<T>;
-  middlewares?: Middleware<Request<T>, Response>[];
-} & Partial<Omit<T, keyof BaseRequest>>;
-
-export type RequestConfig<T = {}> = BaseRequest & {
   adapter?: Adapter<T>;
   middlewares?: Middleware<Request<T>, Response>[];
-} & Partial<Omit<T, keyof BaseRequest>>;
+} & T;
+
+export type RequestConfig<T = {}> = Request<T> & {
+  adapter?: Adapter<T>;
+  middlewares?: Middleware<Request<T>, Response>[];
+};
 
 export type Response<T = any> = {
   data: T;
@@ -47,14 +45,12 @@ export type Response<T = any> = {
   headers: Record<string, string>;
 };
 
-export type Middleware<Req = BaseRequest, Res = Response> = (
+export type Middleware<Req = {}, Res = Response> = (
   next: (options?: Req) => Promise<Res>,
-  options: Req,
+  options: RequestConfig<Req>,
 ) => Promise<Res>;
 
-export type CreateTransportOptions<T> = Omit<Request<T>, 'url'> & {
-  responseType?: ResponseType;
-};
+export type CreateTransportOptions<T> = Request<T>;
 
 export type CreateTransport = <T>(options: CreateTransportOptions<T>) => Transport<T>;
 
@@ -63,9 +59,6 @@ export type RequestMethod = 'get' | 'put' | 'delete' | 'head' | 'post' | 'patch'
 export type Transport<R = {}> = {
   request: <T>(config: RequestConfig<R>) => Promise<Response<T>>;
   extend: {
-    <C extends RequestConfig<R> = RequestConfig<R>>(config: C): Transport<
-      undefined extends C['adapter'] ? R : NonNullable<C['adapter']>
-    >;
     (...middlewares: Middleware<Request<R>, Response<any>>[]): Transport<R>;
   };
   stream<T>(config: RequestConfig<R>): ReadableStream<T>;
