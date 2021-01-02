@@ -1,4 +1,4 @@
-import { RequestMethod, Transport, CreateTransportOptions, Request } from './types';
+import { Transport, CreateTransportOptions, Request, httpMethods } from './types';
 import makeRequest from './make-request';
 
 const createTransport = <T>(options: CreateTransportOptions<T>) => {
@@ -26,9 +26,8 @@ const createTransport = <T>(options: CreateTransportOptions<T>) => {
       return currentLayer();
     },
   } as Transport<T>;
-  const requestMethods: RequestMethod[] = ['get', 'put', 'post', 'head', 'patch', 'delete'];
 
-  requestMethods.forEach((method) => {
+  httpMethods.forEach((method) => {
     transport[method] = (url, opts) =>
       transport.request({ ...options, ...opts, method, url } as any);
   });

@@ -1,11 +1,11 @@
 import {
-  RequestMethod,
   Transport,
   Response,
   Middleware,
   CreateTransport,
   Request,
   CreateTransportOptions,
+  httpMethods,
 } from './types';
 import makeRequest from './make-request';
 
@@ -23,8 +23,6 @@ const applyMiddlewares = (
 
   return currentLayer;
 };
-
-const requestMethods: RequestMethod[] = ['get', 'put', 'post', 'head', 'patch', 'delete'];
 
 const createTransport: CreateTransport = <T>(config: CreateTransportOptions<T>) => {
   const middlewares = (config.middlewares || []) as any;
@@ -46,7 +44,7 @@ const createTransport: CreateTransport = <T>(config: CreateTransportOptions<T>) 
       }),
   } as Transport<T>;
 
-  requestMethods.forEach((method) => {
+  httpMethods.forEach((method) => {
     transport[method] = (url, opts) => transport.request({ ...config, ...opts, url, method });
   });
 

@@ -1,4 +1,4 @@
-import { RequestConfig } from './types';
+import { Request } from './types';
 
 const isAbsoluteUrl = (url: string) => {
   // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
@@ -20,9 +20,9 @@ const serializeParams = (params: Record<string, any>) => {
 };
 
 const buildUrl = (
-  url: RequestConfig['url'] = '',
-  baseUrl?: RequestConfig['baseUrl'],
-  params: RequestConfig['params'] = '',
+  url: Request['url'] = '',
+  baseUrl?: Request['baseUrl'],
+  params: Request['params'] = '',
 ) => {
   const fullUrl = baseUrl && url && !isAbsoluteUrl(url) ? combineUrls(baseUrl, url) : url;
 

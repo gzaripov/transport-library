@@ -1,8 +1,8 @@
 import { Adapter, StreamAdapter } from '../adapter';
 
 type XhrRequest = {
-  withCredentials: boolean;
-  body: Document | BodyInit | null;
+  withCredentials?: boolean;
+  body?: Document | BodyInit | null;
 };
 
 const parseXhrHeaders = (rawHeaders: string): Record<string, string> => {
@@ -42,7 +42,7 @@ export const xhrAdapter: Adapter<XhrRequest> = (request, response) => {
 
   xhr.onload = () => response.emit('text', xhr.responseText);
 
-  xhr.withCredentials = request.withCredentials;
+  xhr.withCredentials = !!request.withCredentials;
   xhr.open(request.method, request.url, true);
 
   Object.entries(request.headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
@@ -85,7 +85,7 @@ export const xhrStreamAdapter: StreamAdapter<XhrRequest, ReadableStream<Uint8Arr
     },
   });
 
-  xhr.withCredentials = request.withCredentials;
+  xhr.withCredentials = !!request.withCredentials;
   xhr.open(request.method, request.url, true);
 
   Object.entries(request.headers).forEach(([key, value]) => xhr.setRequestHeader(key, value));
