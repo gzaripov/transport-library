@@ -1,5 +1,7 @@
 import { terser } from 'rollup-plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
 import pkg from './package.json';
 
 const browser = {
@@ -27,7 +29,7 @@ const browser = {
 
 const node = {
   input: 'src/index.node.ts',
-  plugins: [typescript()],
+  plugins: [commonjs(), resolve(), typescript()],
   external: ['url', 'http', 'https', 'stream'],
   output: [
     {

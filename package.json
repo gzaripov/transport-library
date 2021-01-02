@@ -14,7 +14,7 @@
     "test": "jest",
     "lint": "eslint src/**/*.ts",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
-    "build:js": "rollup -c",
+    "build:js": "rollup -c --failAfterWarnings",
     "build": "rimraf dist && npm run lint && npm run build:types && npm run build:js",
     "semantic-release": "semantic-release"
   },
@@ -35,6 +35,8 @@
   },
   "homepage": "https://github.com/gzaripov/transport-library#readme",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "17.0.0",
+    "@rollup/plugin-node-resolve": "11.0.1",
     "@rollup/plugin-typescript": "4.1.2",
     "@types/jest": "25.2.2",
     "@types/node": "13.11.1",
@@ -52,7 +54,7 @@
     "jest": "26.0.1",
     "prettier": "2.0.4",
     "rimraf": "3.0.2",
-    "rollup": "2.14.0",
+    "rollup": "2.35.1",
     "rollup-plugin-terser": "6.1.0",
     "semantic-release": "17.0.4",
     "ts-jest": "26.0.0",
