@@ -22,10 +22,10 @@ jobs:
       - image: circleci/node:12
     steps:
       - prepare
-      # - run: npm run build
+      - run: npm run build
       - run:
           name: release
-          command: npm run semantic-release || true
+          command: npm run semantic-release
 
   test-node-10:
     working_directory: ~/transport-library

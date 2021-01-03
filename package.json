@@ -10,6 +10,9 @@
   },
   "types": "dist/types/index.node.d.ts",
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "lint": "eslint src/**/*.ts",
