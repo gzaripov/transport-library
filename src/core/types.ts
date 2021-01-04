@@ -27,7 +27,7 @@ export type Method = HttpMethod | Uppercase<HttpMethod>;
 
 export type ResponseType = 'json' | 'text';
 
-export type Request<T = {}> = {
+export type Request<T = {}, C = {}> = {
   url?: string;
   method?: Method;
   baseUrl?: string;
@@ -37,8 +37,9 @@ export type Request<T = {}> = {
   params?: Record<string, any> | string;
   cancelToken?: string;
   adapter?: Adapter<T>;
-  middlewares?: Middleware<Request<T>, Response>[];
-} & T;
+  middlewares?: Middleware<Request<T> & C, Response>[];
+} & T &
+  Partial<C>;
 
 export type Response<T = any> = {
   data: T;
@@ -52,10 +53,11 @@ export type Middleware<Req = Request, Res = Response> = (
   options: Req,
 ) => Promise<Res>;
 
-export type CreateTransport = <T>(options: Request<T>) => Transport<T>;
+export type CreateTransport = <R, C>(options: Request<R>, custom?: C) => Transport<R, C>;
 
-export type Transport<R = {}> = {
-  request: <T>(config: Request<R>) => Promise<Response<T>>;
-  extend: (...middlewares: Middleware<Request<R>, Response<any>>[]) => Transport<R>;
-  stream<T>(config: Request<R>): ReadableStream<T>;
-} & Record<HttpMethod, <T>(url: string, config?: Request<R>) => Promise<Response<T>>>;
+export type Transport<R = {}, C = {}> = {
+  request: <T>(config: Request<R, C>) => Promise<Response<T>>;
+  extend: <O>(options: O & Partial<R & C>) => Transport<R, C & O>;
+  apply: (...middlewares: Middleware<Request<R, C>, Response<any>>[]) => Transport<R, C>;
+  // stream<T>(config: Request<R, C>): ReadableStream<T>;
+} & Record<HttpMethod, <T>(url: string, config?: Request<R, C>) => Promise<Response<T>>>;

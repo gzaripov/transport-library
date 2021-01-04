@@ -73,4 +73,39 @@ describe('Core test', () => {
 
     expect(response.data).toStrictEqual({ test: { json: {} } });
   });
+
+  it('should allow to add custom fields to request', async () => {
+    const transport = createTransport(
+      {
+        adapter: nodeAdapter,
+        responseType: 'text',
+      },
+      {
+        extras: { secret: 'test' },
+      },
+    ).extend({});
+
+    const response = await withServer(
+      async (baseUrl) => {
+        return transport.request({
+          url: '/test',
+          middlewares: [
+            async (request, options) => {
+              const res = await request();
+
+              res.data = Object.assign(JSON.parse(res.data), options.extras);
+
+              return res;
+            },
+          ],
+          baseUrl,
+        });
+      },
+      {
+        handler: (_, res) => res.end(JSON.stringify({ test: { json: {} } })),
+      },
+    );
+
+    expect(response.data).toStrictEqual({ test: { json: {} }, secret: 'test' });
+  });
 });

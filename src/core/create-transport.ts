@@ -16,10 +16,10 @@ const applyMiddlewares = (
   return currentLayer;
 };
 
-const createTransport: CreateTransport = <T>(config: Request<T>) => {
+const createTransport: CreateTransport = <R, C>(config: Request<R>, custom?: C) => {
   const middlewares = (config.middlewares || []) as any;
   const request: Transport['request'] = (opts) => {
-    const defaultOptions = { ...config, ...opts };
+    const defaultOptions = { ...config, ...custom, ...opts };
 
     return applyMiddlewares(
       makeRequest as (req: Request<any>) => Promise<Response>,
@@ -29,12 +29,14 @@ const createTransport: CreateTransport = <T>(config: Request<T>) => {
 
   const transport = {
     request: applyMiddlewares(request, middlewares),
-    extend: (...mws: Middleware[]) =>
-      createTransport({
+    extend: (o) => createTransport(config, { ...custom, ...o }),
+    apply: (...mws: Middleware[]) => {
+      return createTransport({
         ...config,
         middlewares: [...middlewares, ...mws],
-      }),
-  } as Transport<T>;
+      });
+    },
+  } as Transport<R, C>;
 
   httpMethods.forEach((method) => {
     transport[method] = (url, opts) => transport.request({ ...config, ...opts, url, method });
