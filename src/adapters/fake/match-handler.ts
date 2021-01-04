@@ -1,4 +1,5 @@
 import { URL } from 'url';
+import buildUrl from '../../core/build-url';
 import { RegisteredHandler, NO_MATCHER } from './types';
 
 function isUrlMatching(url1: string, url2: string) {
@@ -17,7 +18,9 @@ export default function matchHandler(request: any, handlers: RegisteredHandler[]
       return true;
     }
 
-    const { pathname } = new URL(request.url);
+    const { pathname } = new URL(
+      buildUrl(request.url || '/test', request.baseUrl || 'http://localhost'),
+    );
 
     if (typeof matcher === 'function') {
       return Boolean(

@@ -1,4 +1,5 @@
 import { Adapter } from '../adapters/adapter';
+import { CancelToken } from './cancel-controller';
 
 export type HttpMethod =
   | 'get'
@@ -35,7 +36,7 @@ export type Request<T = {}, C = {}> = {
   responseType?: ResponseType;
   headers?: Record<string, string>;
   params?: Record<string, any> | string;
-  cancelToken?: string;
+  cancelToken?: CancelToken;
   adapter?: Adapter<T>;
   middlewares?: Middleware<Request<T> & C, Response>[];
 } & T &

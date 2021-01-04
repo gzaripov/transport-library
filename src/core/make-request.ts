@@ -28,10 +28,31 @@ const makeRequest = <T>(config: Request<T>): Promise<any> => {
     headers: config.headers || {},
   };
 
-  const request = Object.assign(createEventEmitter<RequestEvents>(), baseRequest);
+  const request = Object.assign(createEventEmitter<RequestEvents>(), baseRequest, {
+    cancelled: false,
+  });
   const response = createEventEmitter<ResponseEvents>();
 
+  if (request.cancelToken) {
+    request.cancelToken.once('cancel', () => {
+      request.emit('cancel');
+      request.cancelled = true;
+    });
+  }
+
   return new Promise((resolve, reject) => {
+    if (request.cancelled) {
+      reject(new Error('Request cancelled'));
+
+      return;
+    }
+
+    if (request.cancelToken) {
+      request.cancelToken.once('cancel', (message) => {
+        reject(new Error(`Request cancelled: ${message}`));
+      });
+    }
+
     const responseObject = {} as Response;
 
     response.on('head', ({ status, statusText, headers }) => {

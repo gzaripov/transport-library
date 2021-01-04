@@ -1,3 +1,4 @@
+import { HttpMethod } from '../../core/types';
 import { Adapter } from '../adapter';
 
 export type AnyRequest = Record<string, any>;
@@ -17,9 +18,8 @@ export type FakeAdapter = {
   reset(): void;
   restore(): void;
   adapter: Adapter<AnyRequest>;
-
-  history: { [method: string]: AnyRequest[] };
-} & FakeMethods;
+  history: Record<HttpMethod, AnyRequest[]>;
+} & FakeAdapterMethods;
 
 export type Handlers = {
   reply: Reply;
@@ -41,17 +41,7 @@ type Query = (matcher?: string | RegExp | MatcherFn) => Handlers;
 // to avoid this we put original signature to function and extract type to use it in code
 export type Matcher = Parameters<Query>[0];
 
-export type FakeMethods = {
-  onGet: Query;
-  onPost: Query;
-  onPut: Query;
-  onHead: Query;
-  onDelete: Query;
-  onPatch: Query;
-  onList: Query;
-  onAny: Query;
-};
-
+export type FakeAdapterMethods = Record<`on${Capitalize<HttpMethod | 'any'>}`, Query>;
 export const NO_MATCHER = Symbol('NO_MATCHER');
 
 export type NoMatcher = typeof NO_MATCHER;

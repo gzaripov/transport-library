@@ -16,7 +16,7 @@ type Method =
 
 export type RequestEvents = {
   sent: () => void;
-  abort: () => void;
+  cancel: () => void;
   error: (error: string | Error) => void;
 };
 

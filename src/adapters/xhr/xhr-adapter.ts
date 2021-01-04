@@ -22,7 +22,6 @@ export const xhrAdapter: Adapter<XhrRequest> = (request, response) => {
   const xhr = new XMLHttpRequest();
 
   xhr.onloadstart = () => request.emit('sent');
-  xhr.onabort = () => request.emit('abort');
   xhr.onerror = () =>
     response.emit('error', new Error('XHR request failed, check console for more details'));
 
@@ -58,7 +57,6 @@ export const xhrStreamAdapter: StreamAdapter<XhrRequest, ReadableStream<Uint8Arr
   const xhr = new XMLHttpRequest();
 
   xhr.onloadstart = () => request.emit('sent');
-  xhr.onabort = () => request.emit('abort');
 
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {

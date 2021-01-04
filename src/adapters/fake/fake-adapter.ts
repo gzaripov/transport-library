@@ -9,7 +9,7 @@ import {
   FakeAdapter,
   Matcher,
   RegisteredHandler,
-  FakeMethods,
+  FakeAdapterMethods,
   Handlers,
 } from './types';
 
@@ -60,7 +60,7 @@ const timeout: Handler = () => (request) => {
 };
 
 const abortRequest: Handler = () => (request) => {
-  request.emit('abort');
+  request.emit('cancel');
 };
 
 const networkError: Handler = () => (request) => {
@@ -116,7 +116,9 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
   });
 
   METHODS.forEach((method) => {
-    const methodName = `on${method.charAt(0).toUpperCase()}${method.slice(1)}` as keyof FakeMethods;
+    const methodName = `on${method.charAt(0).toUpperCase()}${method.slice(
+      1,
+    )}` as keyof FakeAdapterMethods;
 
     fakeApi[methodName] = (matcher) => {
       currentMethod = method;
@@ -150,15 +152,9 @@ export const fakeAdapter: FakeAdapterFn = ({ adapter, delayResponse } = {}) => {
 
     request.emit('sent');
 
-    if (delayResponse) {
-      setTimeout(() => {
-        handler.handler(request, response);
-      }, delayResponse);
-
-      return;
-    }
-
-    handler.handler(request, response);
+    setTimeout(() => {
+      handler.handler(request, response);
+    }, delayResponse || 0);
   };
 
   return fakeApi;

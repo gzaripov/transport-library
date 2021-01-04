@@ -52,9 +52,11 @@ export const nodeAdapter: Adapter<NodeRequest> = (request, response) => {
     res.on('end', () => response.emit('text', chunks.join('')));
   });
 
-  request.on('abort', () => req.destroy());
+  request.on('cancel', () => {
+    req.abort();
+    req.destroy();
+  });
 
-  req.on('abort', () => request.emit('abort'));
   req.on('error', (err) => request.emit('error', err));
   req.end(() => request.emit('sent'));
 };
@@ -107,9 +109,8 @@ export const nodeStreamAdapter: StreamAdapter<https.RequestOptions, stream.Reada
     res.on('end', () => responseStream.push(null));
   });
 
-  request.on('abort', () => req.destroy());
+  request.on('cancel', () => req.destroy());
 
-  req.on('abort', () => request.emit('abort'));
   req.on('error', (err) => request.emit('error', err));
   req.end(() => request.emit('sent'));
 
