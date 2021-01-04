@@ -47,14 +47,12 @@ export type Response<T = any> = {
   headers: Record<string, string>;
 };
 
-export type Middleware<Req = {}, Res = Response> = (
+export type Middleware<Req = Request, Res = Response> = (
   next: (options?: Req) => Promise<Res>,
-  options: Request<Req>,
+  options: Req,
 ) => Promise<Res>;
 
-export type CreateTransportOptions<T> = Request<T>;
-
-export type CreateTransport = <T>(options: CreateTransportOptions<T>) => Transport<T>;
+export type CreateTransport = <T>(options: Request<T>) => Transport<T>;
 
 export type Transport<R = {}> = {
   request: <T>(config: Request<R>) => Promise<Response<T>>;

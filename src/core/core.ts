@@ -1,7 +1,7 @@
-import { Transport, CreateTransportOptions, Request, httpMethods } from './types';
+import { Transport, Request, httpMethods } from './types';
 import makeRequest from './make-request';
 
-const createTransport = <T>(options: CreateTransportOptions<T>) => {
+const createTransport = <T>(options: Request<T>) => {
   const transport = {
     request: (opts) => {
       const defaultOptions = { ...options, ...opts, middlwares: [] };

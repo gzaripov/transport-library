@@ -1,12 +1,4 @@
-import {
-  Transport,
-  Response,
-  Middleware,
-  CreateTransport,
-  Request,
-  CreateTransportOptions,
-  httpMethods,
-} from './types';
+import { Transport, Response, Middleware, CreateTransport, Request, httpMethods } from './types';
 import makeRequest from './make-request';
 
 const applyMiddlewares = (
@@ -24,7 +16,7 @@ const applyMiddlewares = (
   return currentLayer;
 };
 
-const createTransport: CreateTransport = <T>(config: CreateTransportOptions<T>) => {
+const createTransport: CreateTransport = <T>(config: Request<T>) => {
   const middlewares = (config.middlewares || []) as any;
   const request: Transport['request'] = (opts) => {
     const defaultOptions = { ...config, ...opts };
