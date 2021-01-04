@@ -4,7 +4,9 @@ import https from 'https';
 import stream from 'stream';
 import { Adapter, StreamAdapter } from '../adapter';
 
-export const nodeAdapter: Adapter<https.RequestOptions> = (request, response) => {
+export type NodeRequest = https.RequestOptions;
+
+export const nodeAdapter: Adapter<NodeRequest> = (request, response) => {
   const transport = http;
   const agent =
     request.agent ?? request.url.startsWith('https:') ? https.globalAgent : http.globalAgent;

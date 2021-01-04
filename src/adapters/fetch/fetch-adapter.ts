@@ -1,6 +1,7 @@
 import { Adapter, StreamAdapter } from '../adapter';
 
-export const fetchAdapter: Adapter<RequestInit> = (request, response) => {
+export type FetchRequest = RequestInit;
+export const fetchAdapter: Adapter<FetchRequest> = (request, response) => {
   const req = new Request(request.url, request);
 
   return fetch(req)

@@ -1,6 +1,6 @@
 import { Adapter, StreamAdapter } from '../adapter';
 
-type XhrRequest = {
+export type XhrRequest = {
   withCredentials?: boolean;
   body?: Document | BodyInit | null;
 };
