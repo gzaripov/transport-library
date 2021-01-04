@@ -7,3 +7,5 @@ export { xhrAdapter, fetchAdapter };
 export const transport = createTransport({
   adapter: xhrAdapter,
 });
+
+export default transport;

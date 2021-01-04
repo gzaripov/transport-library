@@ -6,3 +6,5 @@ export * from './core/index';
 export const transport = createTransport({
   adapter: nodeAdapter,
 });
+
+export default transport;

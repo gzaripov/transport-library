@@ -3,6 +3,7 @@ describe('Library exports', () => {
     const exports = await import('./index.browser');
 
     expect(exports.transport).toBeDefined();
+    expect(exports.default).toBe(exports.transport);
     expect(exports.xhrAdapter).toBeDefined();
     expect(exports.fetchAdapter).toBeDefined();
     expect(exports.createTransport).toBeDefined();
@@ -13,6 +14,7 @@ describe('Library exports', () => {
     const exports = await import('./index.node');
 
     expect(exports.transport).toBeDefined();
+    expect(exports.default).toBe(exports.transport);
     expect(exports.nodeAdapter).toBeDefined();
     expect(exports.xhrAdapter).toBeDefined();
     expect(exports.fetchAdapter).toBeDefined();
