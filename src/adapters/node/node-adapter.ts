@@ -2,9 +2,9 @@ import url from 'url';
 import http from 'http';
 import https from 'https';
 import stream from 'stream';
-import { Adapter, StreamAdapter } from '../adapter';
+import { Adapter, AdapterRequest, StreamAdapter } from '../adapter';
 
-export type NodeRequest = https.RequestOptions;
+export type NodeRequest = AdapterRequest<https.RequestOptions>;
 
 export const nodeAdapter: Adapter<NodeRequest> = (request, response) => {
   const transport = http;

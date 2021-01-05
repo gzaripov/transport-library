@@ -1,7 +1,7 @@
 import { HttpMethod } from '../../core/types';
-import { Adapter } from '../adapter';
+import { Adapter, AdapterRequest } from '../adapter';
 
-export type AnyRequest = Record<string, any>;
+export type AnyRequest = AdapterRequest<Record<string, any>>;
 export type Handler = (...args: any[]) => Adapter<AnyRequest>;
 
 type ReplyHandlerData = {

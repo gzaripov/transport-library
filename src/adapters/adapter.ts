@@ -20,6 +20,20 @@ export type RequestEvents = {
   error: (error: string | Error) => void;
 };
 
+export type ReservedRequestKeys =
+  | 'url'
+  | 'method'
+  | 'baseUrl'
+  | 'timeout'
+  | 'responseType'
+  | 'headers'
+  | 'params'
+  | 'cancelToken'
+  | 'adapter'
+  | 'middlewares';
+
+export type AdapterRequest<T> = Omit<T, ReservedRequestKeys>;
+
 export type Request<T> = {
   url: string;
   method: Method;

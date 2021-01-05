@@ -1,9 +1,9 @@
-import { Adapter, StreamAdapter } from '../adapter';
+import { Adapter, AdapterRequest, StreamAdapter } from '../adapter';
 
-export type XhrRequest = {
+export type XhrRequest = AdapterRequest<{
   withCredentials?: boolean;
   body?: Document | BodyInit | null;
-};
+}>;
 
 const parseXhrHeaders = (rawHeaders: string): Record<string, string> => {
   const headersRows = rawHeaders.trim().split(/[\r\n]+/);
