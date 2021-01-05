@@ -15,6 +15,14 @@ const validate: Validate = (config) => {
   }
 };
 
+const tryParseJson = (json: string) => {
+  try {
+    return JSON.parse(json);
+  } catch (error) {
+    throw new Error(`Unable to parse json. Received: ${json}\n${error.toString()}`);
+  }
+};
+
 const makeRequest = <T>(config: Request<T>): Promise<any> => {
   validate(config);
 
@@ -63,7 +71,7 @@ const makeRequest = <T>(config: Request<T>): Promise<any> => {
 
     response.on('text', (text) => {
       try {
-        responseObject.data = config.responseType === 'text' ? text : JSON.parse(text);
+        responseObject.data = config.responseType === 'text' ? text : tryParseJson(text);
         resolve(responseObject);
       } catch (error) {
         reject(error);
