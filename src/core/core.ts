@@ -8,8 +8,8 @@ const createTransport = <T>(options: Request<T>) => {
       const request = (newOpts: Request<T> = defaultOptions) => makeRequest(newOpts);
 
       const layers = [
-        ...(options.middlewares! || []).reverse(),
-        ...(opts.middlewares || []).reverse(),
+        ...(options.middlewares || [])!.reverse(),
+        ...(opts.middlewares || [])!.reverse(),
       ];
 
       if (!layers.length) {
