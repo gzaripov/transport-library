@@ -36,7 +36,7 @@ const createTransport: CreateTransport = <R, C>(config: Request<R>, custom?: C) 
         middlewares: [...middlewares, ...mws],
       });
     },
-  } as Transport<R, C>;
+  } as Transport<R & C>;
 
   httpMethods.forEach((method) => {
     transport[method] = (url, opts) => transport.request({ ...config, ...opts, url, method });

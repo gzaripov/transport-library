@@ -53,11 +53,11 @@ export type Middleware<Req = Request, Res = Response> = (
   options: Req,
 ) => Promise<Res>;
 
-export type CreateTransport = <R, C>(options: Request<R>, custom?: C) => Transport<R, C>;
+export type CreateTransport = <R, C>(options: Request<R>, custom?: C) => Transport<R & C>;
 
-export type Transport<R = {}, C = {}> = {
-  request: <T>(config: Partial<Request<R & C>>) => Promise<Response<T>>;
-  extend: <O>(options: O & Partial<R & C>) => Transport<R, C & O>;
-  apply: (...middlewares: Middleware<Request<R & C>, Response<any>>[]) => Transport<R, C>;
+export type Transport<R = {}> = {
+  request: <T>(config: Partial<Request<R>>) => Promise<Response<T>>;
+  extend: <O>(options: O & Partial<R>) => Transport<R & O>;
+  apply: (...middlewares: Middleware<Request<R>, Response<any>>[]) => Transport<R>;
   // stream<T>(config: Request<R, C>): ReadableStream<T>;
-} & Record<HttpMethod, <T>(url: string, config?: Partial<Request<R & C>>) => Promise<Response<T>>>;
+} & Record<HttpMethod, <T>(url: string, config?: Partial<Request<R>>) => Promise<Response<T>>>;
